@@ -1,0 +1,53 @@
+@model LoginRegistro.Models.RegisterVm
+//Indicamos que esta vista va a usar el modelo RegisterVm; el formulario trabaja con el nombre de usuario, la contraseña y la confirmación de la contraseña
+
+@{
+    ViewData["Title"] = "Registro";
+    //Este título se usa normalmente para mostrar el nombre de la página
+}
+
+<h2>Registro</h2>
+<!-- Titulo visible que se va a ver en la página -->
+
+<form asp-action="Register" method="post">
+    <!-- Formulario que enviará los datos al método Register. -->
+    @Html.AntiForgeryToken()
+    <!-- Se genera un token de seguridad para evitar ataques CSRF -->
+    <div asp-validation-summary="All" style="color:red;"></div>
+    <!-- Mostramos los errores generales de validacion en caso de la existencia de alguno -->
+
+    <div>
+        <label asp-for="Username"></label>
+        <!-- Se genera una etiqueta label que se encuentra vinculada al campo Username del modelo -->
+        <input asp-for="Username" />
+        <!-- Se crea el input del formulario que se encuentra vinculado a Username -->
+        <span asp-validation-for="Username" style="color:red;"></span>
+        <!-- Muestra el error específico del campo Username en caso de la existencia de algún problema -->
+    </div>
+
+    <div>
+        <label asp-for="Password"></label>
+        <!-- Se genera una etiqueta label que se encuentra vinculada al campo Password del modelo -->
+        <input asp-for="Password" type="password" />
+        <!-- Se crea el input del formulario que se encuentra vinculado a Password -->
+        <span asp-validation-for="Password" style="color:red;"></span>
+        <!-- Muestra el error específico del campo Password en caso de la existencia de algún problema -->
+    </div>
+
+    <div>
+        <label asp-for="ConfirmPassword"></label>
+        <!-- Se genera una etiqueta label que se encuentra vinculada al campo ConfirmPassword del modelo -->
+        <input asp-for="ConfirmPassword" type="password" />
+        <!-- Se crea el input del formulario que se encuentra vinculado a ConfirmPassword -->
+        <span asp-validation-for="ConfirmPassword" style="color:red;"></span>
+        <!-- Muestra el error específico del campo ConfirmPassword en caso de la existencia de algún problema -->
+    </div>
+
+    <button type="submit">Registrar</button>
+    <!-- Boton que envia el formulario -->
+</form>
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+    <!-- Carga los scripts que son necesarios para que las validaciones funcionen en el navegador -->
+}
