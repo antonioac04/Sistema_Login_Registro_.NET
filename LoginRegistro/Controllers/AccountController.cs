@@ -73,6 +73,74 @@ public class AccountController : Controller
         return RedirectToAction("Login");
     }
 
+    //El metodo Get lo que estamos haciendo es mostrar la vista del login
+    [HttpGet]
+    public IActionResult Login()
+    {
+        return View();
+    }
+    //El metodo POST procesa el formulario cuando el usuario procede a entrar con su cuenta
+    [HttpPost]
+    //Se protege el formulario contra ataques CSRF
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(LoginVm vm)
+    {
+        //Primero comprobamos si el modelo del formulario es decir se han introducido todos los campos que son required
+        if (!ModelState.IsValid)
+            return View(vm);
+        //Segundo se busca en la base de datos el usuario que hemos introducido para más adelante comprobar si existe
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == vm.Username);
+
+        //Tercero; tal y como se ha comentado anteriormente se comprueba si el usuario existe y si la contraseña es correcta; en caso de
+        //que no suceda muestra un mensaje de error diciendo que las credenciales son inválidas
+        if (user == null || !VerifyPassword(vm.Password, user.PasswordHash))
+        {
+            ModelState.AddModelError(string.Empty, "Credenciales inválidas.");
+            return View(vm);
+        }
+
+        //Cuarto si el login es correcto, se crean los claims que son datos que identifican al usuario dentro de la sesión
+        var claims = new List<Claim>
+        {
+            //Se guarda el Id del usuario como identificador principal
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            //Se guarda el nombre de usuario
+            new Claim(ClaimTypes.Name, user.Username)
+        };
+        //Quinto, se crea la identidad del usuario con el esquema de cookies
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        //Sexto se crea la variable principal, que representa al usuario que se encuentra logueado en el sistema.
+        var principal = new ClaimsPrincipal(identity);
+
+        //Sexto se configura como se va a guardar la cookie de login
+        var authProps = new AuthenticationProperties
+        {
+            IsPersistent = vm.RememberMe,
+            ExpiresUtc = vm.RememberMe
+                ? DateTimeOffset.UtcNow.AddDays(7)
+                : DateTimeOffset.UtcNow.AddMinutes(30)
+        };
+
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProps);
+
+        return RedirectToAction("Index", "Home");
+    }
+
+    // Verifica contraseñas en formato "salt.hash"
+    private static bool VerifyPassword(string password, string storedHash)
+    {
+        var parts = storedHash.Split('.');
+        if (parts.Length != 2) return false;
+
+        var salt = Convert.FromBase64String(parts[0]);
+        var hashStored = Convert.FromBase64String(parts[1]);
+
+        var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 100000, HashAlgorithmName.SHA256);
+        var hashComputed = pbkdf2.GetBytes(32);
+
+        return CryptographicOperations.FixedTimeEquals(hashStored, hashComputed);
+    }
+
     //Método privado el cual se usa para crear un hash seguro de la contraseña, haciendo que no se almacene en texto plano.
     private static string HashPassword(string password)
     {
