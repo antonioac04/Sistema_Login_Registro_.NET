@@ -112,7 +112,7 @@ public class AccountController : Controller
         //Sexto se crea la variable principal, que representa al usuario que se encuentra logueado en el sistema.
         var principal = new ClaimsPrincipal(identity);
 
-        //Sexto se configura como se va a guardar la cookie de login
+        //Septimo se configura como se va a guardar la cookie de login
         var authProps = new AuthenticationProperties
         {
             IsPersistent = vm.RememberMe,
@@ -120,24 +120,40 @@ public class AccountController : Controller
                 ? DateTimeOffset.UtcNow.AddDays(7)
                 : DateTimeOffset.UtcNow.AddMinutes(30)
         };
-
+        //Octavo se inicia la sesión y se crea la cookie de autenticación necesaria
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProps);
-
+        //Si el login es correcto redirigimos al Home/Index
         return RedirectToAction("Index", "Home");
     }
 
-    // Verifica contraseñas en formato "salt.hash"
+    //Método el cual se ejecuta cuando el usuario cierra sesión
+    [HttpPost]
+    //Token de seguridad para evitar ataques CSRF
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
+    {
+        //Se cierra la sesión del usuario eliminado. SignOutAsync borra la cookie en la cual se creó cuando se hizo el login
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+        //Cuando se cierra la sesión redirigimos al usuario al inicio de la web
+        return RedirectToAction("Index", "Home");
+    }
+
+    //Metodo privado en la cual se comprueba si la contraseña escrita en el login es la misma que hay en la base de datos
     private static bool VerifyPassword(string password, string storedHash)
     {
+        //Lo primero que realizamos es separar el texto guardado usando el punto "."
         var parts = storedHash.Split('.');
+        //En caso de que no tenga las dos partes, esto significa que se encuentra mál guardado
         if (parts.Length != 2) return false;
-
+        //Segundo se convierte la salt de Base64 a bytes
         var salt = Convert.FromBase64String(parts[0]);
+        //Tercero se convierte el hash guardadode Base64 a bytes
         var hashStored = Convert.FromBase64String(parts[1]);
-
+        //Cuarto calculamos el hash de la contraseñaque el usuario ha escrito; a parte usamos el mismo salt y el mismo método PBKDF2
         var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 100000, HashAlgorithmName.SHA256);
         var hashComputed = pbkdf2.GetBytes(32);
-
+        //Por ultimo se compara el hash guardado con el hash que se ha calculado
         return CryptographicOperations.FixedTimeEquals(hashStored, hashComputed);
     }
 

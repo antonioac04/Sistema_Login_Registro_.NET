@@ -1,0 +1,50 @@
+@model LoginRegistro.Models.LoginVm
+
+@{
+    ViewData["Title"] = "Login";
+    //Se define el nombre del titulo de la página
+}
+
+<h2>Login</h2>
+<!-- Título que será visible para el usuario -->
+<form asp-action="Login" method="post">
+    <!-- Formulario que se va a enviar para cuando se haga el login; usamos el método POST debido a que se van a enviar los datos del formulario -->
+    @Html.AntiForgeryToken()
+    <!-- Token de seguridad el cual se va a evitar ataques CSRF; este sirve para comprobar que el formulario se ha enviado desde la web -->
+
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <!-- En caso de que se produzca algún error aquí estamos indicando donde se debe de mostrar -->
+
+    <div class="mb-2">
+        <!-- Se crea el campo Username -->
+        <label asp-for="Username"></label>
+        <!-- Se vincula el Input al campo Username del modelo Login -->
+        <input asp-for="Username" class="form-control" />
+        <!-- Se muestra si hay un error específico en el campo Username -->
+        <span asp-validation-for="Username" class="text-danger"></span>
+    </div>
+
+    <div class="mb-2">
+        <!-- Se crea el campo Password -->
+        <label asp-for="Password"></label>
+        <!-- Se vincula el Input al campo Password del modelo Login -->
+        <input asp-for="Password" type="password" class="form-control" />
+        <!-- Se muestra si hay un error específico en el campo Password -->
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <!-- Se vincula el Input al campo RememberMe -->
+        <input asp-for="RememberMe" class="form-check-input" />
+        <!-- Se muestra el texto Recordarme el cual se indica al usuario para que sirve -->
+        <label asp-for="RememberMe" class="form-check-label">Recordarme</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Entrar</button>
+    <!-- Botón que envia el formulario -->
+</form>
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+    <!-- Se cargan todos los scripts para validar los datos de los clientes -->
+}

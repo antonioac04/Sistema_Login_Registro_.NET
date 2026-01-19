@@ -1,0 +1,21 @@
+@{
+    //Se define el título de la página
+    ViewData["Title"] = "Zona Privada";
+}
+
+<h2>Zona Privada</h2>
+<!-- Titulo visible que se va a ver en la página -->
+
+<p>Bienvenido, <strong>@User.Identity?.Name</strong></p>
+<!-- Damos la Bienvenido al usuario que se encuentra logueado; y mostramos el nombre de usuario gracias a las cookies -->
+
+<p>Si puedes ver esta página, significa que estás logueado correctamente.</p>
+<!-- Se muestra un texto en el cual se indica que si se puede ver esa página ha iniciado sesión correctamente-->
+
+<form asp-controller="Account" asp-action="Logout" method="post">
+<!-- Formulario que se llama al controlador Account y a la acción Logout -->
+    @Html.AntiForgeryToken()
+    <!-- Token de Seguridad para evitar ataques CSRF -->
+    <button type="submit" class="btn btn-danger">Logout</button>
+    <!-- Botón que envía el formulario -->
+</form>
